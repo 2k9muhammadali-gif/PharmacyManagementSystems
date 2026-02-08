@@ -1,4 +1,20 @@
 /* Bootstrap */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* You can add global styles to this file, and also import other style files */
+/* Modal overlay fix - ensure modal content is ABOVE backdrop */
+.modal {
+  z-index: 1050;
+}
+.modal-dialog {
+  position: relative;
+  z-index: 1060;
+}
+.modal-backdrop {
+  z-index: 1040;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+}
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0 !important;
+}

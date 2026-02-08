@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -45,14 +45,17 @@ interface Customer {
             <td>{{ c.email || '-' }}</td>
             <td>Rs {{ (c.creditLimit ?? 0) | number:'1.2-2' }}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary" (click)="edit(c)">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="edit(c); $event.stopPropagation()">Edit</button>
             </td>
           </tr>
         }
       </tbody>
     </table>
 
-    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+      @if (showModal) {
+        <div class="modal-backdrop fade show" (click)="closeForm()"></div>
+      }
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -93,9 +96,6 @@ interface Customer {
           </div>
         </div>
       </div>
-      @if (showModal) {
-        <div class="modal-backdrop fade show"></div>
-      }
     </div>
   `
 })
@@ -106,7 +106,7 @@ export class CustomersComponent implements OnInit {
   editingId: string | null = null;
   form: Partial<Customer> = { name: '', phone: '', cnic: '', email: '', address: '', creditLimit: 0 };
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.load();
@@ -115,25 +115,30 @@ export class CustomersComponent implements OnInit {
   load() {
     const params: Record<string, string> = {};
     if (this.search) params['search'] = this.search;
-    this.api.get<Customer[]>('/customers', params).subscribe((c) => (this.customers = c || []));
+    this.api.get<Customer[]>('/customers', params).subscribe((c) => {
+      this.customers = c || [];
+      this.cdr.detectChanges();
+    });
   }
 
   openForm() {
     this.editingId = null;
     this.form = { name: '', phone: '', cnic: '', email: '', address: '', creditLimit: 0 };
     this.showModal = true;
+    document.body.classList.add('modal-open');
   }
 
   edit(c: Customer) {
     this.editingId = c.id;
-    this.api.get<Customer>(`/customers/${c.id}`).subscribe((cu) => {
-      this.form = { ...cu };
-      this.showModal = true;
-    });
+    this.form = { ...c };
+    this.showModal = true;
+    document.body.classList.add('modal-open');
+    this.cdr.detectChanges();
   }
 
   closeForm() {
     this.showModal = false;
+    document.body.classList.remove('modal-open');
   }
 
   save() {

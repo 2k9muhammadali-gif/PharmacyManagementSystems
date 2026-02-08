@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -33,7 +33,7 @@ interface Manufacturer {
             <td>{{ m.contactInfo || '-' }}</td>
             <td>{{ m.address || '-' }}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary me-1" (click)="edit(m)">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="edit(m); $event.stopPropagation()">Edit</button>
               <button class="btn btn-sm btn-outline-danger" (click)="remove(m)">Delete</button>
             </td>
           </tr>
@@ -41,7 +41,10 @@ interface Manufacturer {
       </tbody>
     </table>
 
-    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+      @if (showModal) {
+        <div class="modal-backdrop fade show" (click)="closeForm()"></div>
+      }
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -68,9 +71,6 @@ interface Manufacturer {
           </div>
         </div>
       </div>
-      @if (showModal) {
-        <div class="modal-backdrop fade show"></div>
-      }
     </div>
   `
 })
@@ -81,7 +81,7 @@ export class ManufacturersComponent implements OnInit {
   editingId: string | null = null;
   form: Partial<Manufacturer> = { name: '', contactInfo: '', address: '' };
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.load();
@@ -90,23 +90,30 @@ export class ManufacturersComponent implements OnInit {
   load() {
     const params: Record<string, string> = {};
     if (this.search) params['search'] = this.search;
-    this.api.get<Manufacturer[]>('/manufacturers', params).subscribe((m) => (this.manufacturers = m || []));
+    this.api.get<Manufacturer[]>('/manufacturers', params).subscribe((m) => {
+      this.manufacturers = m || [];
+      this.cdr.detectChanges();
+    });
   }
 
   openForm() {
     this.editingId = null;
     this.form = { name: '', contactInfo: '', address: '' };
     this.showModal = true;
+    document.body.classList.add('modal-open');
   }
 
   edit(m: Manufacturer) {
     this.editingId = m.id;
     this.form = { id: m.id, name: m.name, contactInfo: m.contactInfo ?? '', address: m.address ?? '' };
     this.showModal = true;
+    document.body.classList.add('modal-open');
+    this.cdr.detectChanges();
   }
 
   closeForm() {
     this.showModal = false;
+    document.body.classList.remove('modal-open');
   }
 
   save() {

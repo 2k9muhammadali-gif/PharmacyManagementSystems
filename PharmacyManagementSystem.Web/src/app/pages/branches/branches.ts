@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -39,14 +39,17 @@ interface Branch {
             <td>{{ b.phone || '-' }}</td>
             <td><span class="badge" [class.bg-success]="b.isActive" [class.bg-secondary]="!b.isActive">{{ b.isActive ? 'Active' : 'Inactive' }}</span></td>
             <td>
-              <button class="btn btn-sm btn-outline-primary" (click)="edit(b)">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="edit(b); $event.stopPropagation()">Edit</button>
             </td>
           </tr>
         }
       </tbody>
     </table>
 
-    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1" role="dialog" [attr.aria-hidden]="!showModal">
+      @if (showModal) {
+        <div class="modal-backdrop fade show" (click)="closeForm()"></div>
+      }
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -85,9 +88,6 @@ interface Branch {
           </div>
         </div>
       </div>
-      @if (showModal) {
-        <div class="modal-backdrop fade show"></div>
-      }
     </div>
   `
 })
@@ -97,32 +97,37 @@ export class BranchesComponent implements OnInit {
   editingId: string | null = null;
   form: Partial<Branch> = { name: '', address: '', phone: '', fbrStoreId: '', isActive: true };
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.load();
   }
 
   load() {
-    this.api.get<Branch[]>('/branches').subscribe((b) => (this.branches = b || []));
+    this.api.get<Branch[]>('/branches').subscribe((b) => {
+      this.branches = b || [];
+      this.cdr.detectChanges();
+    });
   }
 
   openForm() {
     this.editingId = null;
     this.form = { name: '', address: '', phone: '', fbrStoreId: '', isActive: true };
     this.showModal = true;
+    document.body.classList.add('modal-open');
   }
 
   edit(b: Branch) {
     this.editingId = b.id;
-    this.api.get<Branch>(`/branches/${b.id}`).subscribe((br) => {
-      this.form = { ...br };
-      this.showModal = true;
-    });
+    this.form = { ...b };
+    this.showModal = true;
+    document.body.classList.add('modal-open');
+    this.cdr.detectChanges();
   }
 
   closeForm() {
     this.showModal = false;
+    document.body.classList.remove('modal-open');
   }
 
   save() {

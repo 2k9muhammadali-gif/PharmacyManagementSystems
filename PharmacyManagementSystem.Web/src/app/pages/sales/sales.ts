@@ -41,7 +41,10 @@ interface SaleLine {
       </tbody>
     </table>
 
-    <div class="modal fade" [class.show]="showSaleModal" [style.display]="showSaleModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal fade" [class.show]="showSaleModal" [style.display]="showSaleModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+      @if (showSaleModal) {
+        <div class="modal-backdrop fade show" (click)="closeSaleModal()"></div>
+      }
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -123,9 +126,6 @@ interface SaleLine {
           </div>
         </div>
       </div>
-      @if (showSaleModal) {
-        <div class="modal-backdrop fade show"></div>
-      }
     </div>
   `
 })
@@ -173,6 +173,7 @@ export class SalesComponent implements OnInit {
   }
 
   openNewSale() {
+    document.body.classList.add('modal-open');
     this.saleLines = [];
     this.saleForm = {
       branchId: this.saleForm.branchId || this.branches[0]?.id || '',
@@ -189,6 +190,7 @@ export class SalesComponent implements OnInit {
 
   closeSaleModal() {
     this.showSaleModal = false;
+    document.body.classList.remove('modal-open');
   }
 
   addByBarcode() {
