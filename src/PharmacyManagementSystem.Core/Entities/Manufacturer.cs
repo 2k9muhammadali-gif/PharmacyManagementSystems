@@ -1,7 +1,7 @@
 namespace PharmacyManagementSystem.Core.Entities;
 
 /// <summary>
-/// Pharmaceutical manufacturer (company on Distribution order form).
+/// Pharmaceutical manufacturer (company). Products are supplied through distributions.
 /// </summary>
 public class Manufacturer
 {

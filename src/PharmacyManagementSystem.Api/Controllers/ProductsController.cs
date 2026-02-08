@@ -20,10 +20,25 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<object>>> GetProducts([FromQuery] string? search, [FromQuery] Guid? manufacturerId, [FromQuery] Schedule? schedule)
+    /// <summary>
+    /// Returns the list of active product forms (for dropdowns).
+    /// </summary>
+    [HttpGet("forms")]
+    public async Task<ActionResult<IEnumerable<object>>> GetProductForms()
     {
-        var query = _context.Products.Include(p => p.Manufacturer).AsQueryable();
+        var forms = await _context.ProductForms
+            .Where(f => f.IsActive)
+            .OrderBy(f => f.DisplayOrder)
+            .ThenBy(f => f.Name)
+            .Select(f => new { value = f.Id.ToString(), label = f.Name })
+            .ToListAsync();
+        return Ok(forms);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<object>>> GetProducts([FromQuery] string? search, [FromQuery] Guid? manufacturerId, [FromQuery] Schedule? schedule, [FromQuery] Guid? productFormId)
+    {
+        var query = _context.Products.Include(p => p.Manufacturer).Include(p => p.ProductForm).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(p => p.Name.Contains(search) || (p.Barcode != null && p.Barcode.Contains(search)) || (p.GenericName != null && p.GenericName.Contains(search)));
@@ -31,6 +46,8 @@ public class ProductsController : ControllerBase
             query = query.Where(p => p.ManufacturerId == manufacturerId);
         if (schedule.HasValue)
             query = query.Where(p => p.Schedule == schedule);
+        if (productFormId.HasValue)
+            query = query.Where(p => p.ProductFormId == productFormId);
 
         var list = await query
             .OrderBy(p => p.Name)
@@ -41,7 +58,8 @@ public class ProductsController : ControllerBase
                 p.GenericName,
                 p.Barcode,
                 p.Strength,
-                p.Formulation,
+                Formulation = p.ProductForm != null ? p.ProductForm.Name : null,
+                p.ProductFormId,
                 p.Schedule,
                 p.SalePrice,
                 p.ReorderPoint,
@@ -81,6 +99,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _context.Products
             .Include(p => p.Manufacturer)
+            .Include(p => p.ProductForm)
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (product == null) return NotFound();
@@ -90,7 +109,8 @@ public class ProductsController : ControllerBase
             product.Name,
             product.GenericName,
             product.Strength,
-            product.Formulation,
+            product.ProductFormId,
+            Formulation = product.ProductForm != null ? product.ProductForm.Name : null,
             product.Schedule,
             product.Barcode,
             product.DRAPNumber,
@@ -108,6 +128,12 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Product>> CreateProduct([FromBody] Product product)
     {
+        if (product.ProductFormId.HasValue)
+        {
+            var formExists = await _context.ProductForms.AnyAsync(f => f.Id == product.ProductFormId && f.IsActive);
+            if (!formExists)
+                return BadRequest(new { message = "Invalid product form selected." });
+        }
         product.Id = Guid.NewGuid();
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
@@ -118,7 +144,24 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] Product product)
     {
         if (id != product.Id) return BadRequest();
-        _context.Entry(product).State = EntityState.Modified;
+        var existing = await _context.Products.FindAsync(id);
+        if (existing == null) return NotFound();
+        if (product.ProductFormId.HasValue)
+        {
+            var formExists = await _context.ProductForms.AnyAsync(f => f.Id == product.ProductFormId && f.IsActive);
+            if (!formExists)
+                return BadRequest(new { message = "Invalid product form selected." });
+        }
+        existing.ManufacturerId = product.ManufacturerId;
+        existing.Name = product.Name;
+        existing.GenericName = product.GenericName;
+        existing.Strength = product.Strength;
+        existing.ProductFormId = product.ProductFormId;
+        existing.Schedule = product.Schedule;
+        existing.Barcode = product.Barcode;
+        existing.ReorderPoint = product.ReorderPoint;
+        existing.SalePrice = product.SalePrice;
+        existing.IsActive = product.IsActive;
         await _context.SaveChangesAsync();
         return NoContent();
     }

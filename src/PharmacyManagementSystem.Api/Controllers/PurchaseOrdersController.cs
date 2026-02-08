@@ -49,7 +49,8 @@ public class PurchaseOrdersController : ControllerBase
 
         var po = await _context.PurchaseOrders
             .Include(p => p.Distribution)
-            .Include(p => p.Lines).ThenInclude(l => l.Product)
+            .Include(p => p.Lines).ThenInclude(l => l.Product).ThenInclude(pr => pr!.ProductForm)
+            .Include(p => p.Lines).ThenInclude(l => l.Manufacturer)
             .Where(p => p.Branch.OrganizationId == orgId && p.Id == id)
             .Select(p => new
             {
@@ -60,7 +61,7 @@ public class PurchaseOrdersController : ControllerBase
                 p.OrderDate,
                 p.Status,
                 p.TotalAmount,
-                Lines = p.Lines.Select(l => new { l.ProductId, ProductName = l.Product.Name, l.ManufacturerId, l.Quantity, l.UnitPrice })
+                Lines = p.Lines.Select(l => new { l.ProductId, ProductName = l.Product.Name, Formulation = l.Product.ProductForm != null ? l.Product.ProductForm.Name : null, l.ManufacturerId, ManufacturerName = l.Manufacturer.Name, l.Quantity, l.UnitPrice })
             })
             .FirstOrDefaultAsync();
 
@@ -91,10 +92,19 @@ public class PurchaseOrdersController : ControllerBase
         };
 
         decimal total = 0;
+        var distCompanies = await _context.DistributionCompanies
+            .Where(dc => dc.DistributionId == request.DistributionId)
+            .Select(dc => dc.ManufacturerId)
+            .ToListAsync();
+
         foreach (var line in request.Lines)
         {
             var product = await _context.Products.FindAsync(line.ProductId);
             if (product == null) return BadRequest(new { message = $"Product {line.ProductId} not found." });
+
+            var manufacturerId = line.ManufacturerId ?? product.ManufacturerId;
+            if (!distCompanies.Contains(manufacturerId))
+                return BadRequest(new { message = $"Manufacturer {manufacturerId} is not supplied by this distribution. Add the company to the distribution first." });
 
             var lineAmount = line.Quantity * line.UnitPrice;
             total += lineAmount;
@@ -104,7 +114,7 @@ public class PurchaseOrdersController : ControllerBase
                 Id = Guid.NewGuid(),
                 PurchaseOrderId = po.Id,
                 ProductId = line.ProductId,
-                ManufacturerId = product.ManufacturerId,
+                ManufacturerId = manufacturerId,
                 Quantity = line.Quantity,
                 UnitPrice = line.UnitPrice
             });
@@ -138,6 +148,8 @@ public class PurchaseOrdersController : ControllerBase
                 Id = Guid.NewGuid(),
                 BranchId = po.BranchId,
                 ProductId = line.ProductId,
+                DistributionId = po.DistributionId,
+                ManufacturerId = line.ManufacturerId,
                 BatchNumber = $"PO-{po.Id:N}-{line.ProductId:N}".Substring(0, 50),
                 Quantity = line.Quantity,
                 ExpiryDate = DateTime.UtcNow.AddYears(2),
@@ -169,6 +181,7 @@ public class CreatePurchaseOrderRequest
 public class PurchaseOrderLineRequest
 {
     public Guid ProductId { get; set; }
+    public Guid? ManufacturerId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
 }

@@ -9,6 +9,7 @@ interface Product {
   genericName?: string;
   strength?: string;
   formulation?: string;
+  productFormId?: string;
   schedule: number;
   barcode?: string;
   salePrice: number;
@@ -16,6 +17,11 @@ interface Product {
   isActive: boolean;
   manufacturerId: string;
   manufacturerName?: string;
+}
+
+interface ProductFormOption {
+  value: string;
+  label: string;
 }
 
 @Component({
@@ -27,13 +33,20 @@ interface Product {
       <h2>Products</h2>
       <button class="btn btn-primary" (click)="openForm()">Add Product</button>
     </div>
-    <div class="mb-3">
-      <input type="text" class="form-control" placeholder="Search..." [(ngModel)]="search" (input)="load()" style="max-width: 300px;" />
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+      <input type="text" class="form-control" placeholder="Search..." [(ngModel)]="search" (input)="load()" style="max-width: 250px;" />
+      <select class="form-select" [(ngModel)]="filterProductFormId" (change)="load()" style="max-width: 180px;">
+        <option value="">All forms</option>
+        @for (f of productForms; track f.value) {
+          <option [value]="f.value">{{ f.label }}</option>
+        }
+      </select>
     </div>
     <table class="table table-striped table-hover">
       <thead>
         <tr>
           <th>Name</th>
+          <th>Form</th>
           <th>Manufacturer</th>
           <th>Barcode</th>
           <th>Price</th>
@@ -46,6 +59,7 @@ interface Product {
         @for (p of products; track p.id) {
           <tr>
             <td>{{ p.name }}</td>
+            <td>{{ p.formulation || '-' }}</td>
             <td>{{ p.manufacturerName }}</td>
             <td>{{ p.barcode || '-' }}</td>
             <td>Rs {{ p.salePrice | number:'1.2-2' }}</td>
@@ -96,6 +110,16 @@ interface Product {
                 <input type="text" class="form-control" [(ngModel)]="form.strength" />
               </div>
             </div>
+            <div class="mb-2">
+              <label class="form-label">Form</label>
+              <select class="form-select" [(ngModel)]="form.productFormId">
+                <option value="">-- Select form --</option>
+                @for (f of productForms; track f.value) {
+                  <option [value]="f.value">{{ f.label }}</option>
+                }
+              </select>
+              <small class="text-muted">Manage forms in System Configuration</small>
+            </div>
             <div class="row">
               <div class="col-md-6 mb-2">
                 <label class="form-label">Schedule</label>
@@ -141,15 +165,17 @@ interface Product {
 export class ProductsComponent implements OnInit {
   products: Product[] = [];
   manufacturers: { id: string; name: string }[] = [];
+  productForms: ProductFormOption[] = [];
   search = '';
+  filterProductFormId = '';
   showModal = false;
   editingId: string | null = null;
-  form: Partial<Product> & { manufacturerId?: string; reorderPoint?: number } = {
+  form: Partial<Product> & { manufacturerId?: string; productFormId?: string; reorderPoint?: number } = {
     name: '',
     manufacturerId: '',
     genericName: '',
     strength: '',
-    formulation: '',
+    productFormId: '',
     schedule: 0,
     barcode: '',
     salePrice: 0,
@@ -162,11 +188,13 @@ export class ProductsComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.api.get<{ id: string; name: string }[]>('/manufacturers').subscribe((m) => (this.manufacturers = m || []));
+    this.api.get<ProductFormOption[]>('/products/forms').subscribe((f) => (this.productForms = f || []));
   }
 
   load() {
     const params: Record<string, string> = {};
     if (this.search) params['search'] = this.search;
+    if (this.filterProductFormId) params['productFormId'] = this.filterProductFormId;
     this.api.get<Product[]>('/products', params).subscribe((p) => {
       this.products = p || [];
       this.cdr.detectChanges();
@@ -179,7 +207,7 @@ export class ProductsComponent implements OnInit {
 
   openForm() {
     this.editingId = null;
-    this.form = { name: '', manufacturerId: '', genericName: '', strength: '', formulation: '', schedule: 0, barcode: '', salePrice: 0, reorderPoint: 0, isActive: true };
+    this.form = { name: '', manufacturerId: '', genericName: '', strength: '', productFormId: '', schedule: 0, barcode: '', salePrice: 0, reorderPoint: 0, isActive: true };
     this.showModal = true;
     document.body.classList.add('modal-open');
   }
@@ -191,7 +219,7 @@ export class ProductsComponent implements OnInit {
       name: p.name,
       genericName: p.genericName,
       strength: p.strength,
-      formulation: p.formulation,
+      productFormId: p.productFormId ?? '',
       schedule: p.schedule,
       barcode: p.barcode,
       salePrice: p.salePrice,
@@ -216,7 +244,7 @@ export class ProductsComponent implements OnInit {
       name: this.form.name,
       genericName: this.form.genericName ?? null,
       strength: this.form.strength ?? null,
-      formulation: this.form.formulation ?? null,
+      productFormId: this.form.productFormId || null,
       schedule: this.form.schedule ?? 0,
       barcode: this.form.barcode ?? null,
       reorderPoint: this.form.reorderPoint ?? 0,

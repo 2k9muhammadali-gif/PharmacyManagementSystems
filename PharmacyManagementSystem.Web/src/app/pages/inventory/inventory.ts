@@ -21,13 +21,16 @@ import { AuthService } from '../../services/auth.service';
       <p>Branch: {{ selectedBranch }}</p>
       <table class="table table-striped">
         <thead>
-          <tr><th>Product</th><th>Batch</th><th>Qty</th><th>Expiry</th></tr>
+          <tr><th>Product</th><th>Form</th><th>Batch</th><th>Distribution</th><th>Company</th><th>Qty</th><th>Expiry</th></tr>
         </thead>
         <tbody>
           @for (i of inventory; track i.id) {
             <tr>
               <td>{{ i.productName }}</td>
+              <td>{{ i.formulation || '-' }}</td>
               <td>{{ i.batchNumber }}</td>
+              <td>{{ i.distributionName || '-' }}</td>
+              <td>{{ i.manufacturerName || '-' }}</td>
               <td>{{ i.quantity }}</td>
               <td>{{ i.expiryDate | date }}</td>
             </tr>
@@ -39,7 +42,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class InventoryComponent implements OnInit {
   branches: { id: string; name: string }[] = [];
-  inventory: { id: string; productName: string; batchNumber: string; quantity: number; expiryDate: string }[] = [];
+  inventory: { id: string; productName: string; batchNumber: string; quantity: number; expiryDate: string; formulation?: string; distributionName?: string; manufacturerName?: string }[] = [];
   selectedBranch: string | null = null;
 
   constructor(private api: ApiService, private auth: AuthService) {}
@@ -54,6 +57,6 @@ export class InventoryComponent implements OnInit {
 
   loadInventory(branchId: string) {
     this.selectedBranch = this.branches.find((b) => b.id === branchId)?.name ?? branchId;
-    this.api.get<{ id: string; productName: string; batchNumber: string; quantity: number; expiryDate: string }[]>('/inventory', { branchId }).subscribe((i) => (this.inventory = i || []));
+    this.api.get<{ id: string; productName: string; batchNumber: string; quantity: number; expiryDate: string; formulation?: string; distributionName?: string; manufacturerName?: string }[]>('/inventory', { branchId }).subscribe((i) => (this.inventory = i || []));
   }
 }

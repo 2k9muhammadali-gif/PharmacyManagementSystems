@@ -1,7 +1,7 @@
 namespace PharmacyManagementSystem.Core.Entities;
 
 /// <summary>
-/// Purchase order line item (grouped by manufacturer). 
+/// Purchase order line item. Tracks which company (manufacturer) the product is ordered from under the distribution.
 /// </summary>
 public class PurchaseOrderLine
 {
@@ -14,4 +14,5 @@ public class PurchaseOrderLine
 
     public PurchaseOrder PurchaseOrder { get; set; } = null!;
     public Product Product { get; set; } = null!;
+    public Manufacturer Manufacturer { get; set; } = null!;
 }

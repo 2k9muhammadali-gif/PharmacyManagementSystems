@@ -27,7 +27,9 @@ public class InventoryController : ControllerBase
         if (orgId == null) return Unauthorized();
 
         var query = _context.StockBatches
-            .Include(s => s.Product)
+            .Include(s => s.Product).ThenInclude(p => p.ProductForm)
+            .Include(s => s.Distribution)
+            .Include(s => s.Manufacturer)
             .Where(s => s.BranchId == branchId && s.Branch.OrganizationId == orgId && s.Quantity > 0);
 
         if (productId.HasValue)
@@ -40,6 +42,11 @@ public class InventoryController : ControllerBase
                 s.BranchId,
                 s.ProductId,
                 ProductName = s.Product.Name,
+                Formulation = s.Product.ProductForm != null ? s.Product.ProductForm.Name : null,
+                s.DistributionId,
+                DistributionName = s.Distribution != null ? s.Distribution.Name : null,
+                s.ManufacturerId,
+                ManufacturerName = s.Manufacturer != null ? s.Manufacturer.Name : null,
                 s.BatchNumber,
                 s.Quantity,
                 s.ExpiryDate,

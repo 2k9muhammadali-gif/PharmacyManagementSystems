@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PharmacyManagementSystem.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using PharmacyManagementSystem.Infrastructure.Data;
 namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208170557_AddDistributionCompanies")]
+    partial class AddDistributionCompanies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -367,6 +370,9 @@ namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
                     b.Property<string>("DrugInteractions")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Formulation")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("GenericName")
                         .HasColumnType("nvarchar(max)");
 
@@ -380,9 +386,6 @@ namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
-
-                    b.Property<Guid?>("ProductFormId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ReorderPoint")
                         .HasColumnType("int");
@@ -405,34 +408,7 @@ namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
 
                     b.HasIndex("ManufacturerId");
 
-                    b.HasIndex("ProductFormId");
-
                     b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("PharmacyManagementSystem.Core.Entities.ProductForm", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("ProductForms");
                 });
 
             modelBuilder.Entity("PharmacyManagementSystem.Core.Entities.PurchaseOrder", b =>
@@ -689,37 +665,6 @@ namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
                     b.ToTable("StockBatches");
                 });
 
-            modelBuilder.Entity("PharmacyManagementSystem.Core.Entities.SystemSetting", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Category", "Key")
-                        .IsUnique();
-
-                    b.ToTable("SystemSettings");
-                });
-
             modelBuilder.Entity("PharmacyManagementSystem.Core.Entities.TransferRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -915,14 +860,7 @@ namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PharmacyManagementSystem.Core.Entities.ProductForm", "ProductForm")
-                        .WithMany()
-                        .HasForeignKey("ProductFormId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Manufacturer");
-
-                    b.Navigation("ProductForm");
                 });
 
             modelBuilder.Entity("PharmacyManagementSystem.Core.Entities.PurchaseOrder", b =>
@@ -949,7 +887,7 @@ namespace PharmacyManagementSystem.Infrastructure.Data.Migrations
                     b.HasOne("PharmacyManagementSystem.Core.Entities.Manufacturer", "Manufacturer")
                         .WithMany()
                         .HasForeignKey("ManufacturerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PharmacyManagementSystem.Core.Entities.Product", "Product")

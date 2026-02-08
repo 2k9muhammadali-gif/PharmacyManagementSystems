@@ -12,7 +12,7 @@ public class Product
     public string Name { get; set; } = string.Empty;
     public string? GenericName { get; set; }
     public string? Strength { get; set; }
-    public string? Formulation { get; set; }
+    public Guid? ProductFormId { get; set; }
     public Schedule Schedule { get; set; }
     public string? Barcode { get; set; }
     public string? DRAPNumber { get; set; }
@@ -24,4 +24,5 @@ public class Product
     public bool IsActive { get; set; } = true;
 
     public Manufacturer Manufacturer { get; set; } = null!;
+    public ProductForm? ProductForm { get; set; }
 }

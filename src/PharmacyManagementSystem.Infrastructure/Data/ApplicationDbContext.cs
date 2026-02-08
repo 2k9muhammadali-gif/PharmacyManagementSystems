@@ -18,9 +18,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
+    public DbSet<ProductForm> ProductForms => Set<ProductForm>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<StockBatch> StockBatches => Set<StockBatch>();
     public DbSet<Distribution> Distributions => Set<Distribution>();
+    public DbSet<DistributionCompany> DistributionCompanies => Set<DistributionCompany>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<Customer> Customers => Set<Customer>();
@@ -80,6 +83,23 @@ public class ApplicationDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(200).IsRequired();
         });
 
+        // ProductForm
+        modelBuilder.Entity<ProductForm>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.Name).IsUnique();
+        });
+
+        // SystemSetting
+        modelBuilder.Entity<SystemSetting>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Category).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Key).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => new { x.Category, x.Key }).IsUnique();
+        });
+
         // Product
         modelBuilder.Entity<Product>(e =>
         {
@@ -87,6 +107,7 @@ public class ApplicationDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(300).IsRequired();
             e.HasIndex(x => x.Barcode);
             e.HasOne(x => x.Manufacturer).WithMany(m => m.Products).HasForeignKey(x => x.ManufacturerId);
+            e.HasOne(x => x.ProductForm).WithMany().HasForeignKey(x => x.ProductFormId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // StockBatch
@@ -95,6 +116,8 @@ public class ApplicationDbContext : DbContext
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Branch).WithMany().HasForeignKey(x => x.BranchId);
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId);
+            e.HasOne(x => x.Distribution).WithMany().HasForeignKey(x => x.DistributionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Manufacturer).WithMany().HasForeignKey(x => x.ManufacturerId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // Distribution
@@ -102,6 +125,15 @@ public class ApplicationDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        });
+
+        // DistributionCompany
+        modelBuilder.Entity<DistributionCompany>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.DistributionId, x.ManufacturerId }).IsUnique();
+            e.HasOne(x => x.Distribution).WithMany(d => d.Companies).HasForeignKey(x => x.DistributionId);
+            e.HasOne(x => x.Manufacturer).WithMany().HasForeignKey(x => x.ManufacturerId);
         });
 
         // PurchaseOrder
@@ -118,6 +150,7 @@ public class ApplicationDbContext : DbContext
             e.HasKey(x => x.Id);
             e.HasOne(x => x.PurchaseOrder).WithMany(p => p.Lines).HasForeignKey(x => x.PurchaseOrderId);
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId);
+            e.HasOne(x => x.Manufacturer).WithMany().HasForeignKey(x => x.ManufacturerId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // Customer

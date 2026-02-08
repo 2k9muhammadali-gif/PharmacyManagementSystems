@@ -15,11 +15,14 @@ import { AuthService } from '../services/auth.service';
           <a class="nav-link" routerLink="/dashboard">Dashboard</a>
           <a class="nav-link" routerLink="/products">Products</a>
           <a class="nav-link" routerLink="/manufacturers">Manufacturers</a>
+          <a class="nav-link" routerLink="/distributions">Distributions</a>
           <a class="nav-link" routerLink="/branches">Branches</a>
+          <a class="nav-link" routerLink="/purchase-orders">Purchase Orders</a>
           <a class="nav-link" routerLink="/customers">Customers</a>
           <a class="nav-link" routerLink="/sales">Sales</a>
           <a class="nav-link" routerLink="/inventory">Inventory</a>
           <a class="nav-link" routerLink="/reports">Reports</a>
+          <a class="nav-link" routerLink="/system-config">Settings</a>
         </div>
         <div class="navbar-nav">
           <span class="nav-link">{{ auth.user()?.fullName }}</span>

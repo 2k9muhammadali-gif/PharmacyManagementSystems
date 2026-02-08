@@ -20,20 +20,43 @@ public class DistributionsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Distribution>>> GetDistributions([FromQuery] string? search)
+    public async Task<ActionResult<IEnumerable<object>>> GetDistributions([FromQuery] string? search)
     {
         var query = _context.Distributions.AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(d => d.Name.Contains(search));
 
-        var list = await query.OrderBy(d => d.Name).ToListAsync();
+        var list = await query
+            .Select(d => new
+            {
+                d.Id,
+                d.Name,
+                d.Contact,
+                d.Address,
+                d.Phone,
+                CompanyCount = d.Companies.Count
+            })
+            .OrderBy(d => d.Name)
+            .ToListAsync();
         return Ok(list);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Distribution>> GetDistribution(Guid id)
+    public async Task<ActionResult<object>> GetDistribution(Guid id)
     {
-        var dist = await _context.Distributions.FindAsync(id);
+        var dist = await _context.Distributions
+            .Include(d => d.Companies).ThenInclude(c => c.Manufacturer)
+            .Where(d => d.Id == id)
+            .Select(d => new
+            {
+                d.Id,
+                d.Name,
+                d.Contact,
+                d.Address,
+                d.Phone,
+                Companies = d.Companies.Select(c => new { c.Id, c.ManufacturerId, ManufacturerName = c.Manufacturer.Name })
+            })
+            .FirstOrDefaultAsync();
         if (dist == null) return NotFound();
         return Ok(dist);
     }
@@ -52,6 +75,16 @@ public class DistributionsController : ControllerBase
     {
         if (id != distribution.Id) return BadRequest();
         _context.Entry(distribution).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteDistribution(Guid id)
+    {
+        var dist = await _context.Distributions.FindAsync(id);
+        if (dist == null) return NotFound();
+        _context.Distributions.Remove(dist);
         await _context.SaveChangesAsync();
         return NoContent();
     }
