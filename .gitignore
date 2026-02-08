@@ -1,0 +1,46 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# Rider
+.idea/
+*.sln.iml
+
+# User-specific
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Sensitive
+Creds.txt
+appsettings.Development.json
+*.pfx
+
+# Angular (nested)
+PharmacyManagementSystem.Web/node_modules/
+PharmacyManagementSystem.Web/dist/
+PharmacyManagementSystem.Web/.angular/
+
+# MSTest
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*

@@ -1,0 +1,131 @@
+{
+  "info": {
+    "name": "Pharmacy Management System API",
+    "description": "Complete Postman collection for Pharmacy Management System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:5029/api"},
+    {"key": "token", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [{
+        "name": "Health Check",
+        "request": {
+          "method": "GET",
+          "url": "{{baseUrl}}/health"
+        }
+      }]
+    },
+    {
+      "name": "Auth",
+      "item": [{
+        "name": "Login",
+        "event": [{
+          "listen": "test",
+          "script": {
+            "exec": ["if (pm.response.code === 200) { var j = pm.response.json(); pm.collectionVariables.set('token', j.token); }"]
+          }
+        }],
+        "request": {
+          "method": "POST",
+          "header": [{"key": "Content-Type", "value": "application/json"}],
+          "body": {"mode": "raw", "raw": "{\"email\":\"admin@pharmacy.com\",\"password\":\"Admin@123\"}"},
+          "url": "{{baseUrl}}/auth/login"
+        }
+      }]
+    },
+    {
+      "name": "License",
+      "item": [
+        {"name": "Activate License", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"licenseKey\":\"TRIAL-DEFAULT-001\"}"}, "url": "{{baseUrl}}/license/activate"}},
+        {"name": "License Status", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/license/status"}}
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {"name": "Get Users", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/users"}},
+        {"name": "Create User", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"email\":\"user@test.com\",\"password\":\"Pass@123\",\"fullName\":\"Test User\",\"role\":4,\"branchId\":null}"}, "url": "{{baseUrl}}/users"}}
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        {"name": "Get Branches", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/branches"}},
+        {"name": "Create Branch", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"name\":\"Branch 2\",\"address\":\"456 Street\"}"}, "url": "{{baseUrl}}/branches"}}
+      ]
+    },
+    {
+      "name": "Manufacturers",
+      "item": [
+        {"name": "Get Manufacturers", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/manufacturers"}},
+        {"name": "Create Manufacturer", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"name\":\"Getz Pharma\",\"contactInfo\":\"contact@getz.com\"}"}, "url": "{{baseUrl}}/manufacturers"}}
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {"name": "Get Products", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/products"}},
+        {"name": "Search by Barcode", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/products/search?barcode=123"}}
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {"name": "Get Inventory", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/inventory?branchId=BRANCH_ID"}},
+        {"name": "Get Alerts", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/inventory/alerts?branchId=BRANCH_ID"}}
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {"name": "Get Customers", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/customers"}},
+        {"name": "Create Customer", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"name\":\"John Doe\",\"phone\":\"03001234567\"}"}, "url": "{{baseUrl}}/customers"}}
+      ]
+    },
+    {
+      "name": "Sales",
+      "item": [
+        {"name": "Get Sales", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/sales"}},
+        {"name": "Create Sale", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"branchId\":\"BRANCH_ID\",\"paymentMode\":0,\"lines\":[{\"productId\":\"PRODUCT_ID\",\"quantity\":2,\"unitPrice\":0}]}"}, "url": "{{baseUrl}}/sales"}}
+      ]
+    },
+    {
+      "name": "Distributions",
+      "item": [
+        {"name": "Get Distributions", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/distributions"}}
+      ]
+    },
+    {
+      "name": "Purchase Orders",
+      "item": [
+        {"name": "Get Purchase Orders", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/purchase-orders"}}
+      ]
+    },
+    {
+      "name": "Transfers",
+      "item": [
+        {"name": "Get Transfers", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/transfers"}}
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {"name": "Sales Report", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/reports/sales?from=2025-01-01&to=2025-12-31"}},
+        {"name": "Top Products", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/reports/top-products"}},
+        {"name": "Expiry Report", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/reports/expiry?branchId=BRANCH_ID"}},
+        {"name": "Stock Valuation", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/reports/stock-valuation"}}
+      ]
+    },
+    {
+      "name": "Compliance",
+      "item": [
+        {"name": "Controlled Substances", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/compliance/controlled-substances"}},
+        {"name": "Audit Log", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": "{{baseUrl}}/compliance/audit-log"}}
+      ]
+    }
+  ]
+}
